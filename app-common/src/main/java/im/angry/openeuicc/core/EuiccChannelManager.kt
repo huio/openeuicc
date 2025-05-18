@@ -81,6 +81,7 @@ interface EuiccChannelManager {
     suspend fun <R> withEuiccChannel(
         physicalSlotId: Int,
         portId: Int,
+        seId: Int = 0,
         fn: suspend (EuiccChannel) -> R
     ): R
 
@@ -89,6 +90,7 @@ interface EuiccChannelManager {
      */
     suspend fun <R> withEuiccChannel(
         logicalSlotId: Int,
+        seId: Int = 0,
         fn: suspend (EuiccChannel) -> R
     ): R
 

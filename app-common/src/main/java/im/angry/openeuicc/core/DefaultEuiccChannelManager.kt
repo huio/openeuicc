@@ -174,6 +174,7 @@ open class DefaultEuiccChannelManager(
     override suspend fun <R> withEuiccChannel(
         physicalSlotId: Int,
         portId: Int,
+        seId: Int,
         fn: suspend (EuiccChannel) -> R
     ): R {
         val channel = findEuiccChannelByPort(physicalSlotId, portId)
@@ -190,6 +191,7 @@ open class DefaultEuiccChannelManager(
 
     override suspend fun <R> withEuiccChannel(
         logicalSlotId: Int,
+        seId: Int,
         fn: suspend (EuiccChannel) -> R
     ): R {
         val channel = findEuiccChannelByLogicalSlot(logicalSlotId)

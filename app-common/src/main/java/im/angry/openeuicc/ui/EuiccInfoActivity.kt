@@ -92,7 +92,7 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
 
         lifecycleScope.launch {
             (infoList.adapter!! as EuiccInfoAdapter).euiccInfoItems =
-                euiccChannelManager.withEuiccChannel(logicalSlotId, ::buildEuiccInfoItems)
+                euiccChannelManager.withEuiccChannel(logicalSlotId, fn = ::buildEuiccInfoItems)
 
             swipeRefresh.isRefreshing = false
         }
