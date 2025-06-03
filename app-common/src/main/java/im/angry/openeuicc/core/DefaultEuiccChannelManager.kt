@@ -32,7 +32,7 @@ open class DefaultEuiccChannelManager(
 
     private val channelCache = mutableListOf<EuiccChannel>()
 
-    private var usbChannel: EuiccChannel? = null
+    private var usbChannels = mutableListOf<EuiccChannel>()
 
     private val lock = Mutex()
 
@@ -51,15 +51,17 @@ open class DefaultEuiccChannelManager(
     protected open val uiccCards: Collection<UiccCardInfoCompat>
         get() = (0..<tm.activeModemCountCompat).map { FakeUiccCardInfoCompat(it) }
 
-    private suspend inline fun tryOpenChannelFirstValidAid(openFn: (ByteArray) -> EuiccChannel?): EuiccChannel? {
+    private suspend inline fun tryOpenChannelWithKnownAids(openFn: (ByteArray, Int) -> EuiccChannel?): List<EuiccChannel> {
         val isdrAidList =
             parseIsdrAidList(appContainer.preferenceRepository.isdrAidListFlow.first())
+        var seId = 0
 
-        return isdrAidList.firstNotNullOfOrNull {
-            Log.i(TAG, "Opening channel, trying ISDR AID ${it.encodeHex()}")
+        return isdrAidList.mapNotNull {
+            Log.i(TAG, "Opening channel, trying ISDR AID ${it.encodeHex()}, this will be seId ${seId}")
 
-            openFn(it)?.let { channel ->
+            openFn(it, seId)?.let { channel ->
                 if (channel.valid) {
+                    seId += 1
                     channel
                 } else {
                     channel.close()
@@ -69,19 +71,15 @@ open class DefaultEuiccChannelManager(
         }
     }
 
-    private suspend fun tryOpenEuiccChannel(port: UiccPortInfoCompat): EuiccChannel? {
+    private suspend fun tryOpenEuiccChannel(port: UiccPortInfoCompat, seId: Int = 0): EuiccChannel? {
         lock.withLock {
             if (port.card.physicalSlotIndex == EuiccChannelManager.USB_CHANNEL_ID) {
-                return if (usbChannel != null && usbChannel!!.valid) {
-                    usbChannel
-                } else {
-                    usbChannel = null
-                    null
-                }
+                // We only compare seId because we assume we can only open 1 card from USB
+                return usbChannels.find { it.seId == seId }
             }
 
             val existing =
-                channelCache.find { it.slotId == port.card.physicalSlotIndex && it.portId == port.portIndex }
+                channelCache.find { it.slotId == port.card.physicalSlotIndex && it.portId == port.portIndex && it.seId == seId }
             if (existing != null) {
                 if (existing.valid && port.logicalSlotIndex == existing.logicalSlotId) {
                     return existing
@@ -96,12 +94,12 @@ open class DefaultEuiccChannelManager(
                 return null
             }
 
-            val channel =
-                tryOpenChannelFirstValidAid { euiccChannelFactory.tryOpenEuiccChannel(port, it) }
+            val channels =
+                tryOpenChannelWithKnownAids { isdrAid, seId -> euiccChannelFactory.tryOpenEuiccChannel(port, isdrAid, seId) }
 
-            if (channel != null) {
-                channelCache.add(channel)
-                return channel
+            if (channels.isNotEmpty()) {
+                channelCache.addAll(channels)
+                return channels.find { it.seId == seId }
             } else {
                 Log.i(
                     TAG,
@@ -112,10 +110,10 @@ open class DefaultEuiccChannelManager(
         }
     }
 
-    protected suspend fun findEuiccChannelByLogicalSlot(logicalSlotId: Int): EuiccChannel? =
+    protected suspend fun findEuiccChannelByLogicalSlot(logicalSlotId: Int, seId: Int = 0): EuiccChannel? =
         withContext(Dispatchers.IO) {
             if (logicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
-                return@withContext usbChannel
+                return@withContext usbChannels.find { it.seId == seId }
             }
 
             for (card in uiccCards) {
@@ -131,7 +129,7 @@ open class DefaultEuiccChannelManager(
 
     private suspend fun findAllEuiccChannelsByPhysicalSlot(physicalSlotId: Int): List<EuiccChannel>? {
         if (physicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
-            return usbChannel?.let { listOf(it) }
+            return usbChannels.ifEmpty { null }
         }
 
         for (card in uiccCards) {
@@ -142,14 +140,14 @@ open class DefaultEuiccChannelManager(
         return null
     }
 
-    private suspend fun findEuiccChannelByPort(physicalSlotId: Int, portId: Int): EuiccChannel? =
+    private suspend fun findEuiccChannelByPort(physicalSlotId: Int, portId: Int, seId: Int = 0): EuiccChannel? =
         withContext(Dispatchers.IO) {
             if (physicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
-                return@withContext usbChannel
+                return@withContext usbChannels.find { it.seId == seId }
             }
 
             uiccCards.find { it.physicalSlotIndex == physicalSlotId }?.let { card ->
-                card.ports.find { it.portIndex == portId }?.let { tryOpenEuiccChannel(it) }
+                card.ports.find { it.portIndex == portId }?.let { tryOpenEuiccChannel(it, seId) }
             }
         }
 
@@ -168,7 +166,7 @@ open class DefaultEuiccChannelManager(
                 return@withContext listOf(0)
             }
 
-            findAllEuiccChannelsByPhysicalSlot(physicalSlotId)?.map { it.portId } ?: listOf()
+            findAllEuiccChannelsByPhysicalSlot(physicalSlotId)?.map { it.portId }?.toSet()?.toList() ?: listOf()
         }
 
     override suspend fun <R> withEuiccChannel(
@@ -177,7 +175,7 @@ open class DefaultEuiccChannelManager(
         seId: Int,
         fn: suspend (EuiccChannel) -> R
     ): R {
-        val channel = findEuiccChannelByPort(physicalSlotId, portId)
+        val channel = findEuiccChannelByPort(physicalSlotId, portId, seId)
             ?: throw EuiccChannelManager.EuiccChannelNotFoundException()
         val wrapper = EuiccChannelWrapper(channel)
         try {
@@ -194,7 +192,7 @@ open class DefaultEuiccChannelManager(
         seId: Int,
         fn: suspend (EuiccChannel) -> R
     ): R {
-        val channel = findEuiccChannelByLogicalSlot(logicalSlotId)
+        val channel = findEuiccChannelByLogicalSlot(logicalSlotId, seId)
             ?: throw EuiccChannelManager.EuiccChannelNotFoundException()
         val wrapper = EuiccChannelWrapper(channel)
         try {
@@ -208,8 +206,8 @@ open class DefaultEuiccChannelManager(
 
     override suspend fun waitForReconnect(physicalSlotId: Int, portId: Int, timeoutMillis: Long) {
         if (physicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
-            usbChannel?.close()
-            usbChannel = null
+            usbChannels.forEach { it.close() }
+            usbChannels.clear()
         } else {
             // If there is already a valid channel, we close it proactively
             // Sometimes the current channel can linger on for a bit even after it should have become invalid
@@ -225,7 +223,7 @@ open class DefaultEuiccChannelManager(
                         // tryOpenUsbEuiccChannel() will always try to reopen the channel, even if
                         // a USB channel already exists
                         tryOpenUsbEuiccChannel()
-                        usbChannel!!
+                        usbChannels.getOrNull(0)!!
                     } else {
                         // tryOpenEuiccChannel() will automatically dispose of invalid channels
                         // and recreate when needed
@@ -282,12 +280,13 @@ open class DefaultEuiccChannelManager(
                 val ccidCtx = UsbCcidContext.createFromUsbDevice(context, device, iface) ?: return@forEach
 
                 try {
-                    val channel = tryOpenChannelFirstValidAid {
-                        euiccChannelFactory.tryOpenUsbEuiccChannel(ccidCtx, it)
+                    val channels = tryOpenChannelWithKnownAids { isdrAid, seId ->
+                        euiccChannelFactory.tryOpenUsbEuiccChannel(ccidCtx, isdrAid, seId)
                     }
-                    if (channel != null && channel.lpa.valid) {
+                    if (channels.isNotEmpty() && channels[0].valid) {
                         ccidCtx.allowDisconnect = true
-                        usbChannel = channel
+                        usbChannels.clear()
+                        usbChannels.addAll(channels)
                         return@withContext Pair(device, true)
                     }
                 } catch (e: Exception) {
@@ -311,8 +310,8 @@ open class DefaultEuiccChannelManager(
             channel.close()
         }
 
-        usbChannel?.close()
-        usbChannel = null
+        usbChannels.forEach { it.close() }
+        usbChannels.clear()
         channelCache.clear()
         euiccChannelFactory.cleanup()
     }

@@ -14,6 +14,7 @@ class EuiccChannelImpl(
     override val intrinsicChannelName: String?,
     override val apduInterface: ApduInterface,
     override val isdrAid: ByteArray,
+    override val seId: Int,
     verboseLoggingFlow: Flow<Boolean>,
     ignoreTLSCertificateFlow: Flow<Boolean>
 ) : EuiccChannel {

@@ -13,6 +13,16 @@ interface EuiccChannel {
     val logicalSlotId: Int
     val portId: Int
 
+    /**
+     * Some chips support multiple SEs on one chip. The seId here is intended
+     * to distinguish channels opened from these different SEs.
+     *
+     * Note that this ID is arbitrary and heavily depends on the order in which
+     * we attempt to open the ISD-R AIDs. As such, it shall not be treated with
+     * any significance other than as a transient ID.
+     */
+    val seId: Int
+
     val lpa: LocalProfileAssistant
 
     val valid: Boolean
