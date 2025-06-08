@@ -17,7 +17,12 @@ private typealias BundleSetter = Bundle.() -> Unit
 // We must use extension functions because there is no way to add bounds to the type of "self"
 // in the definition of an interface, so the only way is to limit where the extension functions
 // can be applied.
-fun <T> newInstanceEuicc(clazz: Class<T>, slotId: Int, portId: Int, addArguments: BundleSetter = {}): T
+fun <T> newInstanceEuicc(
+    clazz: Class<T>,
+    slotId: Int,
+    portId: Int,
+    addArguments: BundleSetter = {}
+): T
         where T : Fragment, T : EuiccChannelFragmentMarker =
     clazz.getDeclaredConstructor().newInstance().apply {
         arguments = Bundle()
@@ -54,7 +59,12 @@ val <T> T.euiccChannelManagerService: EuiccChannelManagerService
 suspend fun <T, R> T.withEuiccChannel(fn: suspend (EuiccChannel) -> R): R
         where T : Fragment, T : EuiccChannelFragmentMarker {
     ensureEuiccChannelManager()
-    return euiccChannelManager.withEuiccChannel(slotId, portId, fn)
+    return euiccChannelManager.withEuiccChannel(
+        slotId,
+        portId,
+        EuiccChannel.SecureElementId.DEFAULT,
+        fn
+    )
 }
 
 suspend fun <T> T.ensureEuiccChannelManager() where T : Fragment, T : OpenEuiccContextMarker =

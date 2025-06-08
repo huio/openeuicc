@@ -14,14 +14,39 @@ interface EuiccChannel {
     val portId: Int
 
     /**
+     * A semi-obscure wrapper over the integer ID of a secure element on a card.
+     *
+     * Because the ID is arbitrary, this is intended to discourage the use of the
+     * integer value directly. Additionally, it prevents accidentally calling the
+     * wrong function in EuiccChannelManager with a ton of integer parameters.
+     */
+    class SecureElementId private constructor(val id: Int) {
+        companion object {
+            val DEFAULT = SecureElementId(0)
+
+            /**
+             * Create a SecureElementId from an integer ID. You should not
+             */
+            fun createFromInt(id: Int): SecureElementId =
+                SecureElementId(id)
+        }
+
+        override fun hashCode(): Int =
+            id.hashCode()
+
+        override fun equals(other: Any?): Boolean =
+            if (other is SecureElementId) {
+                this.id == other.id
+            } else {
+                super.equals(other)
+            }
+    }
+
+    /**
      * Some chips support multiple SEs on one chip. The seId here is intended
      * to distinguish channels opened from these different SEs.
-     *
-     * Note that this ID is arbitrary and heavily depends on the order in which
-     * we attempt to open the ISD-R AIDs. As such, it shall not be treated with
-     * any significance other than as a transient ID.
      */
-    val seId: Int
+    val seId: SecureElementId
 
     val lpa: LocalProfileAssistant
 

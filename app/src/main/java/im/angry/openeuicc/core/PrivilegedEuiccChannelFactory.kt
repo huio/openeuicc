@@ -17,7 +17,7 @@ class PrivilegedEuiccChannelFactory(context: Context) : DefaultEuiccChannelFacto
     override suspend fun tryOpenEuiccChannel(
         port: UiccPortInfoCompat,
         isdrAid: ByteArray,
-        seId: Int,
+        seId: EuiccChannel.SecureElementId,
     ): EuiccChannel? {
         val port = port as RealUiccPortInfoCompat
         if (port.card.isRemovable) {

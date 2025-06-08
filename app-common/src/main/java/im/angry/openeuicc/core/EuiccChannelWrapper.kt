@@ -26,7 +26,7 @@ class EuiccChannelWrapper(orig: EuiccChannel) : EuiccChannel {
         get() = channel.logicalSlotId
     override val portId: Int
         get() = channel.portId
-    override val seId: Int
+    override val seId: EuiccChannel.SecureElementId
         get() = channel.seId
     private val lpaDelegate = lazy {
         LocalProfileAssistantWrapper(channel.lpa)

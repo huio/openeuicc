@@ -81,16 +81,16 @@ interface EuiccChannelManager {
     suspend fun <R> withEuiccChannel(
         physicalSlotId: Int,
         portId: Int,
-        seId: Int = 0,
+        seId: EuiccChannel.SecureElementId = EuiccChannel.SecureElementId.DEFAULT,
         fn: suspend (EuiccChannel) -> R
     ): R
 
     /**
-     * Same as withEuiccChannel(Int, Int, (EuiccChannel) -> R) but instead uses logical slot ID
+     * Same as withEuiccChannel(Int, Int, SecureElementId, (EuiccChannel) -> R) but instead uses logical slot ID
      */
     suspend fun <R> withEuiccChannel(
         logicalSlotId: Int,
-        seId: Int = 0,
+        seId: EuiccChannel.SecureElementId = EuiccChannel.SecureElementId.DEFAULT,
         fn: suspend (EuiccChannel) -> R
     ): R
 

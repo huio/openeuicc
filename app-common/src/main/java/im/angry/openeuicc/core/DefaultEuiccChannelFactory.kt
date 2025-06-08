@@ -21,7 +21,7 @@ open class DefaultEuiccChannelFactory(protected val context: Context) : EuiccCha
     override suspend fun tryOpenEuiccChannel(
         port: UiccPortInfoCompat,
         isdrAid: ByteArray,
-        seId: Int,
+        seId: EuiccChannel.SecureElementId,
     ): EuiccChannel? {
         if (port.portIndex != 0) {
             Log.w(
@@ -68,7 +68,7 @@ open class DefaultEuiccChannelFactory(protected val context: Context) : EuiccCha
     override fun tryOpenUsbEuiccChannel(
         ccidCtx: UsbCcidContext,
         isdrAid: ByteArray,
-        seId: Int
+        seId: EuiccChannel.SecureElementId
     ): EuiccChannel? {
         try {
             return EuiccChannelImpl(
