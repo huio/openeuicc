@@ -1,5 +1,7 @@
 package im.angry.openeuicc.core
 
+import android.os.Parcel
+import android.os.Parcelable
 import im.angry.openeuicc.util.*
 import net.typeblog.lpac_jni.ApduInterface
 import net.typeblog.lpac_jni.LocalProfileAssistant
@@ -20,7 +22,7 @@ interface EuiccChannel {
      * integer value directly. Additionally, it prevents accidentally calling the
      * wrong function in EuiccChannelManager with a ton of integer parameters.
      */
-    class SecureElementId private constructor(val id: Int) {
+    class SecureElementId private constructor(val id: Int) : Parcelable {
         companion object {
             val DEFAULT = SecureElementId(0)
 
@@ -29,6 +31,15 @@ interface EuiccChannel {
              */
             fun createFromInt(id: Int): SecureElementId =
                 SecureElementId(id)
+
+            @Suppress("unused")
+            @JvmField
+            val CREATOR = object : Parcelable.Creator<SecureElementId> {
+                override fun createFromParcel(parcel: Parcel): SecureElementId =
+                    createFromInt(parcel.readInt())
+
+                override fun newArray(size: Int): Array<SecureElementId?> = arrayOfNulls(size)
+            }
         }
 
         override fun hashCode(): Int =
@@ -40,6 +51,12 @@ interface EuiccChannel {
             } else {
                 super.equals(other)
             }
+
+        override fun describeContents(): Int = id
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeInt(id)
+        }
     }
 
     /**
