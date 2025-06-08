@@ -1,5 +1,6 @@
 package im.angry.openeuicc.util
 
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import im.angry.openeuicc.core.EuiccChannel
@@ -9,6 +10,7 @@ import im.angry.openeuicc.ui.BaseEuiccAccessActivity
 
 private const val FIELD_SLOT_ID = "slotId"
 private const val FIELD_PORT_ID = "portId"
+private const val FIELD_SE_ID = "seId"
 
 interface EuiccChannelFragmentMarker : OpenEuiccContextMarker
 
@@ -21,6 +23,7 @@ fun <T> newInstanceEuicc(
     clazz: Class<T>,
     slotId: Int,
     portId: Int,
+    seId: EuiccChannel.SecureElementId,
     addArguments: BundleSetter = {}
 ): T
         where T : Fragment, T : EuiccChannelFragmentMarker =
@@ -28,6 +31,7 @@ fun <T> newInstanceEuicc(
         arguments = Bundle()
         arguments!!.putInt(FIELD_SLOT_ID, slotId)
         arguments!!.putInt(FIELD_PORT_ID, portId)
+        arguments!!.putParcelable(FIELD_SE_ID, seId)
         arguments!!.addArguments()
     }
 
@@ -40,6 +44,18 @@ val <T> T.slotId: Int
 val <T> T.portId: Int
         where T : Fragment, T : EuiccChannelFragmentMarker
     get() = requireArguments().getInt(FIELD_PORT_ID)
+val <T> T.seId: EuiccChannel.SecureElementId
+        where T : Fragment, T : EuiccChannelFragmentMarker
+    get() =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireArguments().getParcelable(
+                FIELD_SE_ID,
+                EuiccChannel.SecureElementId::class.java
+            )!!
+        } else {
+            @Suppress("DEPRECATION")
+            requireArguments().getParcelable(FIELD_SE_ID)!!
+        }
 val <T> T.isUsb: Boolean
         where T : Fragment, T : EuiccChannelFragmentMarker
     get() = slotId == EuiccChannelManager.USB_CHANNEL_ID
@@ -62,7 +78,7 @@ suspend fun <T, R> T.withEuiccChannel(fn: suspend (EuiccChannel) -> R): R
     return euiccChannelManager.withEuiccChannel(
         slotId,
         portId,
-        EuiccChannel.SecureElementId.DEFAULT,
+        seId,
         fn
     )
 }

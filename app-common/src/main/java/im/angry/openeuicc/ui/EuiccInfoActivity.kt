@@ -36,6 +36,7 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
     private lateinit var infoList: RecyclerView
 
     private var logicalSlotId: Int = -1
+    private var seId: EuiccChannel.SecureElementId = EuiccChannel.SecureElementId.DEFAULT
 
     data class Item(
         @StringRes
@@ -60,6 +61,12 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
         }
 
         logicalSlotId = intent.getIntExtra("logicalSlotId", 0)
+        seId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("seId", EuiccChannel.SecureElementId::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra("seId")!!
+        } ?: EuiccChannel.SecureElementId.DEFAULT
 
         val channelTitle = if (logicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
             getString(R.string.usb)
@@ -100,19 +107,43 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
 
     private fun buildEuiccInfoItems(channel: EuiccChannel) = buildList {
         add(Item(R.string.euicc_info_access_mode, channel.type))
-        add(Item(R.string.euicc_info_removable, formatByBoolean(channel.port.card.isRemovable, YES_NO)))
-        add(Item(R.string.euicc_info_eid, channel.lpa.eID, copiedToastResId = R.string.toast_eid_copied))
+        add(
+            Item(
+                R.string.euicc_info_removable,
+                formatByBoolean(channel.port.card.isRemovable, YES_NO)
+            )
+        )
+        add(
+            Item(
+                R.string.euicc_info_eid,
+                channel.lpa.eID,
+                copiedToastResId = R.string.toast_eid_copied
+            )
+        )
         add(Item(R.string.euicc_info_isdr_aid, channel.isdrAid.encodeHex()))
         channel.tryParseEuiccVendorInfo()?.let { vendorInfo ->
             vendorInfo.skuName?.let { add(Item(R.string.euicc_info_sku, it)) }
-            vendorInfo.serialNumber?.let { add(Item(R.string.euicc_info_sn, it, copiedToastResId = R.string.toast_sn_copied)) }
+            vendorInfo.serialNumber?.let {
+                add(
+                    Item(
+                        R.string.euicc_info_sn,
+                        it,
+                        copiedToastResId = R.string.toast_sn_copied
+                    )
+                )
+            }
             vendorInfo.firmwareVersion?.let { add(Item(R.string.euicc_info_fw_ver, it)) }
             vendorInfo.bootloaderVersion?.let { add(Item(R.string.euicc_info_bl_ver, it)) }
         }
         channel.lpa.euiccInfo2.let { info ->
             add(Item(R.string.euicc_info_sgp22_version, info?.sgp22Version.toString()))
             add(Item(R.string.euicc_info_firmware_version, info?.euiccFirmwareVersion.toString()))
-            add(Item(R.string.euicc_info_globalplatform_version, info?.globalPlatformVersion.toString()))
+            add(
+                Item(
+                    R.string.euicc_info_globalplatform_version,
+                    info?.globalPlatformVersion.toString()
+                )
+            )
             add(Item(R.string.euicc_info_pp_version, info?.ppVersion.toString()))
             add(Item(R.string.euicc_info_sas_accreditation_number, info?.sasAccreditationNumber))
             add(Item(R.string.euicc_info_free_nvram, info?.freeNvram?.let(::formatFreeSpace)))
@@ -130,7 +161,7 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
             }
             add(Item(R.string.euicc_info_ci_type, getString(resId)))
         }
-        val atr =  channel.atr?.encodeHex() ?: getString(R.string.information_unavailable)
+        val atr = channel.atr?.encodeHex() ?: getString(R.string.information_unavailable)
         add(Item(R.string.euicc_info_atr, atr, copiedToastResId = R.string.toast_atr_copied))
     }
 

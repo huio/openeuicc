@@ -11,6 +11,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import im.angry.openeuicc.common.R
+import im.angry.openeuicc.core.EuiccChannel
 import im.angry.openeuicc.service.EuiccChannelManagerService.Companion.waitDone
 import im.angry.openeuicc.util.EuiccChannelFragmentMarker
 import im.angry.openeuicc.util.EuiccProfilesChangedListener
@@ -29,8 +30,8 @@ class EuiccMemoryResetFragment : DialogFragment(), EuiccChannelFragmentMarker {
 
         private const val FIELD_EID = "eid"
 
-        fun newInstance(slotId: Int, portId: Int, eid: String) =
-            newInstanceEuicc(EuiccMemoryResetFragment::class.java, slotId, portId) {
+        fun newInstance(slotId: Int, portId: Int, seId: EuiccChannel.SecureElementId, eid: String) =
+            newInstanceEuicc(EuiccMemoryResetFragment::class.java, slotId, portId, seId) {
                 putString(FIELD_EID, eid)
             }
     }
