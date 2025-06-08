@@ -284,6 +284,20 @@ open class DefaultEuiccChannelManager(
             }
         })
 
+    override fun flowEuiccSecureElements(
+        slotId: Int,
+        portId: Int
+    ): Flow<EuiccChannel.SecureElementId> = flow {
+        // Emit the "default" channel first
+        // TODO: This function below should really return a list, not just one SE
+        findEuiccChannelByPort(slotId, portId, seId = EuiccChannel.SecureElementId.DEFAULT)?.let {
+            emit(EuiccChannel.SecureElementId.DEFAULT)
+
+            channelCache.filter { it.slotId == slotId && it.portId == portId && it.seId != EuiccChannel.SecureElementId.DEFAULT }
+                .forEach { emit(it.seId) }
+        }
+    }
+
     override suspend fun tryOpenUsbEuiccChannel(): Pair<UsbDevice?, Boolean> =
         withContext(Dispatchers.IO) {
             usbManager.deviceList.values.forEach { device ->
