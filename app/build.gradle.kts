@@ -64,12 +64,16 @@ val moduleCustomizeScript = project.file("magisk/customize.sh").readText()
     .replace("{APK_NAME}", "OpenEUICC")
     .replace("{PKG_NAME}", android.defaultConfig.applicationId!!)
 
+val moduleUninstallScript = project.file("magisk/uninstall.sh").readText()
+    .replace("{PKG_NAME}", android.defaultConfig.applicationId!!)
+
 tasks.register<MagiskModuleDirTask>("assembleDebugMagiskModuleDir") {
     variant = "debug"
     appName = "OpenEUICC"
     permsFile = project.rootProject.file("privapp_whitelist_im.angry.openeuicc.xml")
     moduleInstaller = project.file("magisk/module_installer.sh")
     moduleCustomizeScriptText = moduleCustomizeScript
+    moduleUninstallScriptText = moduleUninstallScript
     moduleProp = modulePropsTemplate.let {
         it["description"] = "(debug build) ${it["description"]}"
         it["versionCode"] = "${(android.applicationVariants.find { it.name == "debug" }!!.outputs.first() as ApkVariantOutputImpl).versionCodeOverride}"
@@ -92,6 +96,7 @@ tasks.register<MagiskModuleDirTask>("assembleReleaseMagiskModuleDir") {
     permsFile = project.rootProject.file("privapp_whitelist_im.angry.openeuicc.xml")
     moduleInstaller = project.file("magisk/module_installer.sh")
     moduleCustomizeScriptText = moduleCustomizeScript
+    moduleUninstallScriptText = moduleUninstallScript
     moduleProp = modulePropsTemplate
     dependsOn("assembleRelease")
 }

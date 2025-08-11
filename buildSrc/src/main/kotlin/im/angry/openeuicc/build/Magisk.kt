@@ -27,6 +27,9 @@ abstract class MagiskModuleDirTask : DefaultTask() {
     abstract val moduleCustomizeScriptText : Property<String>
 
     @get:Input
+    abstract val moduleUninstallScriptText : Property<String>
+
+    @get:Input
     abstract val moduleProp : MapProperty<String, String>
 
     @InputDirectory
@@ -64,6 +67,7 @@ abstract class MagiskModuleDirTask : DefaultTask() {
             rename(".*", "update-binary")
         }
         dir.file("customize.sh").asFile.writeText(moduleCustomizeScriptText.get())
+        dir.file("uninstall.sh").asFile.writeText(moduleUninstallScriptText.get())
         metaInfDir.file("updater-script").asFile.writeText("# MAGISK")
         dir.file("module.prop").asFile.writeText(moduleProp.get().map { (k, v) -> "$k=$v" }.joinToString("\n"))
     }
