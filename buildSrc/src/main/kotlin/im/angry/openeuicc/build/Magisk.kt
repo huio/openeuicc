@@ -23,8 +23,8 @@ abstract class MagiskModuleDirTask : DefaultTask() {
     @get:InputFile
     abstract val moduleInstaller : Property<File>
 
-    @get:InputFile
-    abstract val moduleCustomizeScript : Property<File>
+    @get:Input
+    abstract val moduleCustomizeScriptText : Property<String>
 
     @get:Input
     abstract val moduleProp : MapProperty<String, String>
@@ -63,11 +63,7 @@ abstract class MagiskModuleDirTask : DefaultTask() {
             into(metaInfDir)
             rename(".*", "update-binary")
         }
-        project.copy {
-            from(moduleCustomizeScript)
-            into(dir)
-            rename(".*", "customize.sh")
-        }
+        dir.file("customize.sh").asFile.writeText(moduleCustomizeScriptText.get())
         metaInfDir.file("updater-script").asFile.writeText("# MAGISK")
         dir.file("module.prop").asFile.writeText(moduleProp.get().map { (k, v) -> "$k=$v" }.joinToString("\n"))
     }
