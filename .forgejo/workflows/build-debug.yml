@@ -36,7 +36,7 @@ jobs:
         run: ./gradlew --no-daemon assembleDebug :app:assembleDebugMagiskModuleDir
 
       - name: Copy Artifacts
-        steps: |
+        run: |
           find . -name 'app*-debug.apk' -exec cp {} . \;
           cp -r app/build/magisk/debug ./magisk-debug
 
