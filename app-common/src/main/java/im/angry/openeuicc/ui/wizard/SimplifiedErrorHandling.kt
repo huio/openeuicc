@@ -29,6 +29,10 @@ object SimplifiedErrorHandling {
             R.string.download_wizard_error_card_internal_error,
             null
         ),
+        EIDNotSupported(
+            R.string.download_wizard_error_eid_not_supported,
+            R.string.download_wizard_error_suggest_contact_carrier
+        ),
         EIDMismatch(
             R.string.download_wizard_error_eid_mismatch,
             R.string.download_wizard_error_suggest_contact_reissue
@@ -78,6 +82,7 @@ object SimplifiedErrorHandling {
     private val httpErrors = buildMap {
         // Stage: AuthenticateClient
         put("8.1" to "4.8", ErrorCode.InsufficientMemory)
+        put("8.1.1" to "2.1", ErrorCode.EIDNotSupported)
         put("8.1.1" to "3.8", ErrorCode.EIDMismatch)
         put("8.2" to "1.2", ErrorCode.UnreleasedProfile)
         put("8.2.6" to "3.8", ErrorCode.MatchingIDRefused)

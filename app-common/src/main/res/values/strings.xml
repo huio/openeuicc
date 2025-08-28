@@ -108,6 +108,7 @@
     <string name="download_wizard_error_insufficient_memory">Sorry, The remaining capacity of this eSIM chip cannot be used to install this eSIM profile.</string>
     <string name="download_wizard_error_unsupported_profile">Sorry, This eSIM profile is unsupported.</string>
     <string name="download_wizard_error_card_internal_error">An error occurred inside the card.</string>
+    <string name="download_wizard_error_eid_not_supported">This device does not support the EID required for this eSIM profile.</string>
     <string name="download_wizard_error_eid_mismatch">This eSIM profile has been installed on another device.</string>
     <string name="download_wizard_error_profile_unreleased">This eSIM profile has been unreleased.</string>
     <string name="download_wizard_error_matching_id_refused">This eSIM activation code is invalid.</string>
