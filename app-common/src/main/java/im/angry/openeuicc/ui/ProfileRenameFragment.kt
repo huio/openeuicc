@@ -66,7 +66,7 @@ class ProfileRenameFragment : BaseMaterialDialogFragment(), EuiccChannelFragment
         super.onViewCreated(view, savedInstanceState)
         profileRenameNewName.editText!!.setText(currentName)
         toolbar.apply {
-            setTitle(R.string.rename)
+            setTitle(R.string.profile_rename)
             setNavigationOnClickListener {
                 if (!renaming) dismiss()
             }

@@ -36,7 +36,7 @@ private val RE_SAS = Regex(
 
 class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
     companion object {
-        private val YES_NO = Pair(R.string.yes, R.string.no)
+        private val YES_NO = Pair(R.string.euicc_info_yes, R.string.euicc_info_no)
     }
 
     private lateinit var swipeRefresh: SwipeRefreshLayout
@@ -76,7 +76,7 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
         } ?: EuiccChannel.SecureElementId.DEFAULT
 
         val channelTitle = if (logicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
-            getString(R.string.usb)
+            getString(R.string.channel_type_usb)
         } else {
             appContainer.customizableTextProvider.formatInternalChannelName(logicalSlotId)
         }
@@ -145,11 +145,17 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
         channel.lpa.euiccInfo2?.let { info ->
             add(Item(R.string.euicc_info_sgp22_version, info.sgp22Version.toString()))
             add(Item(R.string.euicc_info_firmware_version, info.euiccFirmwareVersion.toString()))
-            add(Item(R.string.euicc_info_globalplatform_version, info.globalPlatformVersion.toString()))
+            add(Item(R.string.euicc_info_gp_version, info.globalPlatformVersion.toString()))
             add(Item(R.string.euicc_info_pp_version, info.ppVersion.toString()))
             info.sasAccreditationNumber.trim().takeIf(RE_SAS::matches)
                 ?.let { add(Item(R.string.euicc_info_sas_accreditation_number, it.uppercase())) }
-            add(Item(R.string.euicc_info_free_nvram, info.freeNvram.let(::formatFreeSpace)))
+
+            val nvramText = buildString {
+                append(formatFreeSpace(info.freeNvram))
+                append(' ')
+                append(getString(R.string.euicc_info_free_nvram_hint))
+            }
+            add(Item(R.string.euicc_info_free_nvram, nvramText))
         }
         channel.lpa.euiccInfo2?.euiccCiPKIdListForSigning.orEmpty().let { signers ->
             // SGP.28 v1.0, eSIM CI Registration Criteria (Page 5 of 9, 2019-10-24)
@@ -157,14 +163,14 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
             // FS.27 v2.0, Security Guidelines for UICC Profiles (Page 25 of 27, 2024-01-30)
             // https://www.gsma.com/solutions-and-impact/technologies/security/wp-content/uploads/2024/01/FS.27-Security-Guidelines-for-UICC-Credentials-v2.0-FINAL-23-July.pdf#page=25
             val resId = when {
-                signers.isEmpty() -> R.string.unknown // the case is not mp, but it's is not common
+                signers.isEmpty() -> R.string.euicc_info_unknown // the case is not mp, but it's is not common
                 PKID_GSMA_LIVE_CI.any(signers::contains) -> R.string.euicc_info_ci_gsma_live
                 PKID_GSMA_TEST_CI.any(signers::contains) -> R.string.euicc_info_ci_gsma_test
                 else -> R.string.euicc_info_ci_unknown
             }
             add(Item(R.string.euicc_info_ci_type, getString(resId)))
         }
-        val atr = channel.atr?.encodeHex() ?: getString(R.string.information_unavailable)
+        val atr = channel.atr?.encodeHex() ?: getString(R.string.euicc_info_unavailable)
         add(Item(R.string.euicc_info_atr, atr, copiedToastResId = R.string.toast_atr_copied))
     }
 
@@ -197,7 +203,7 @@ class EuiccInfoActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
         fun bind(item: Item) {
             copiedToastResId = item.copiedToastResId
             title.setText(item.titleResId)
-            content.text = item.content ?: getString(R.string.unknown)
+            content.text = item.content ?: getString(R.string.euicc_info_unknown)
         }
     }
 
