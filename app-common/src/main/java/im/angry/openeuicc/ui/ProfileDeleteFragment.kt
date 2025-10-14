@@ -89,7 +89,7 @@ class ProfileDeleteFragment : DialogFragment(), EuiccChannelFragmentMarker {
         requireParentFragment().lifecycleScope.launch {
             ensureEuiccChannelManager()
             euiccChannelManagerService.waitForForegroundTask()
-            euiccChannelManagerService.launchProfileDeleteTask(slotId, portId, iccid)
+            euiccChannelManagerService.launchProfileDeleteTask(slotId, portId, seId, iccid)
                 .onStart {
                     parentFragment?.notifyEuiccProfilesChanged()
                     runCatching(::dismiss)

@@ -106,7 +106,7 @@ class ProfileRenameFragment : BaseMaterialDialogFragment(), EuiccChannelFragment
             ensureEuiccChannelManager()
             euiccChannelManagerService.waitForForegroundTask()
             val response = euiccChannelManagerService
-                .launchProfileRenameTask(slotId, portId, iccid, newName).waitDone()
+                .launchProfileRenameTask(slotId, portId, seId, iccid, newName).waitDone()
 
             when (response) {
                 is LocalProfileAssistant.ProfileNameTooLongException -> {

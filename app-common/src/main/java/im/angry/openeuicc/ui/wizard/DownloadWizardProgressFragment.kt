@@ -168,6 +168,7 @@ class DownloadWizardProgressFragment : DownloadWizardActivity.DownloadWizardStep
             val ret = euiccChannelManagerService.launchProfileDownloadTask(
                 slotId,
                 portId,
+                seId,
                 state.smdp,
                 state.matchingId,
                 state.confirmationCode,

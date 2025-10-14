@@ -20,6 +20,7 @@ import im.angry.openeuicc.util.euiccChannelManagerService
 import im.angry.openeuicc.util.newInstanceEuicc
 import im.angry.openeuicc.util.notifyEuiccProfilesChanged
 import im.angry.openeuicc.util.portId
+import im.angry.openeuicc.util.seId
 import im.angry.openeuicc.util.slotId
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
@@ -104,7 +105,7 @@ class EuiccMemoryResetFragment : DialogFragment(), EuiccChannelFragmentMarker {
             ensureEuiccChannelManager()
             euiccChannelManagerService.waitForForegroundTask()
 
-            euiccChannelManagerService.launchMemoryReset(slotId, portId)
+            euiccChannelManagerService.launchMemoryReset(slotId, portId, seId)
                 .onStart {
                     parentFragment?.notifyEuiccProfilesChanged()
 

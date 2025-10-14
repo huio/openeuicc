@@ -248,6 +248,7 @@ open class EuiccManagementFragment : Fragment(), EuiccProfilesChangedListener,
             val err = euiccChannelManagerService.launchProfileSwitchTask(
                 slotId,
                 portId,
+                seId,
                 iccid,
                 enable,
                 reconnectTimeoutMillis = 30 * 1000
