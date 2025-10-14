@@ -27,7 +27,10 @@ interface EuiccChannel {
             val DEFAULT = SecureElementId(0)
 
             /**
-             * Create a SecureElementId from an integer ID. You should not
+             * Create a SecureElementId from an integer ID. You should not call this directly
+             * unless you know what you're doing.
+             *
+             * This is currently only ever used in the download flow.
              */
             fun createFromInt(id: Int): SecureElementId =
                 SecureElementId(id)

@@ -23,7 +23,6 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import im.angry.openeuicc.common.R
-import im.angry.openeuicc.core.EuiccChannel
 import im.angry.openeuicc.core.EuiccChannelManager
 import im.angry.openeuicc.util.*
 import kotlinx.coroutines.Dispatchers
@@ -168,7 +167,7 @@ open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
                     euiccChannelManager.notifyEuiccProfilesChanged(channel.logicalSlotId)
 
                     val channelName =
-                        appContainer.customizableTextProvider.formatInternalChannelName(channel.logicalSlotId)
+                        appContainer.customizableTextProvider.formatNonUsbChannelName(channel.logicalSlotId)
                     newPages.add(Page(channel.logicalSlotId, channelName) {
                         appContainer.uiComponentFactory.createEuiccManagementFragment(
                             slotId,
